@@ -19,7 +19,7 @@ export class UserService {
 
       return user as IUserDto;
     } catch (err) {
-      throw new BadRequestException('Erro ao cadastrar usuário');
+      throw new BadRequestException('Usuário já existe.');
     }
   }
 }
