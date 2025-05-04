@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/config/PrismaService';
 import * as bcrypt from 'bcrypt';
 import { ILoginDto } from './interface/ILoginDto';
@@ -15,6 +15,10 @@ export class AuthService {
       where: { email: loginDto.email }
     });
 
+    if (!user) {
+      throw new BadRequestException("Usuário não encontrato.")
+    }
+
     if (!bcrypt.compareSync(loginDto.password, user.password)) {
       throw new UnauthorizedException("Senha incorreta!")
     }
@@ -22,5 +26,6 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, name: user.name };
 
     return { access_token: await this.jwtService.signAsync(payload) };
+
   }
 }
