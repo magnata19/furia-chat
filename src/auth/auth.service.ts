@@ -11,21 +11,25 @@ export class AuthService {
   ) { }
 
   async signIn(loginDto: ILoginDto): Promise<{ access_token: string }> {
-    const user = await this.prismaService.user.findFirstOrThrow({
-      where: { email: loginDto.email }
-    });
+    try {
+      const user = await this.prismaService.user.findFirst({
+        where: { email: loginDto.email }
+      });
 
-    if (!user) {
-      throw new BadRequestException("Usuário não encontrato.")
+      if (!user) {
+        throw new BadRequestException("Usuário não encontrato.")
+      }
+
+      if (!bcrypt.compareSync(loginDto.password, user.password)) {
+        throw new UnauthorizedException("Senha incorreta!")
+      }
+
+      const payload = { sub: user.id, email: user.email, name: user.name };
+
+      return { access_token: await this.jwtService.signAsync(payload) };
+    } catch (err) {
+      throw new UnauthorizedException("Usuário não encontrado.");
     }
-
-    if (!bcrypt.compareSync(loginDto.password, user.password)) {
-      throw new UnauthorizedException("Senha incorreta!")
-    }
-
-    const payload = { sub: user.id, email: user.email, name: user.name };
-
-    return { access_token: await this.jwtService.signAsync(payload) };
 
   }
 }
